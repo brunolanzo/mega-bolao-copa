@@ -1,79 +1,56 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useRouter } from 'next/router'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const router = useRouter()
 
-  async function handleLogin() {
-    setLoading(true)
+  async function handleLogin(e) {
+    e.preventDefault()
+    setErrorMsg('')
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-    setLoading(false)
 
-    if (error) alert(error.message)
-    else alert('Logado com sucesso')
+    if (error) {
+      setErrorMsg(error.message)
+    } else {
+      router.push('/') // 🔥 ISSO RESOLVE
+    }
   }
-
-  async function handleSignup() {
-  setLoading(true)
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  })
-
-  if (!error && data.user) {
-    await supabase.from('profiles').insert({
-      id: data.user.id,
-      name: email.split('@')[0], // provisório
-    })
-  }
-
-  setLoading(false)
-
-  if (error) alert(error.message)
-  else alert('Conta criada! Agora faça login.')
-}
-
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'Arial'
-    }}>
-      <div style={{ width: 300 }}>
-        <h1>Mega Bolão da Copa</h1>
+    <div style={{ padding: 40 }}>
+      <h1>Login</h1>
 
+      <form onSubmit={handleLogin}>
         <input
+          type="email"
           placeholder="Email"
+          value={email}
           onChange={e => setEmail(e.target.value)}
-          style={{ width: '100%', padding: 8 }}
         />
+
         <br /><br />
 
         <input
           type="password"
           placeholder="Senha"
+          value={password}
           onChange={e => setPassword(e.target.value)}
-          style={{ width: '100%', padding: 8 }}
         />
+
         <br /><br />
 
-        <button onClick={handleLogin} disabled={loading}>
-          Entrar
-        </button>
-        {' '}
-        <button onClick={handleSignup} disabled={loading}>
-          Criar conta
-        </button>
-      </div>
+        <button type="submit">Entrar</button>
+      </form>
+
+      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
     </div>
   )
 }
